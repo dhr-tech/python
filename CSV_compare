@@ -1,0 +1,30 @@
+import pandas as pd
+
+illumio_file = 'Workloads_LabelingColumns_CSV_2026_01_16_13_50_55.csv'
+customers_file = 'flow_tracker01.csv'
+output_file = 'Illumio_workload_shortlisted.csv'
+
+def filter_remaining_customers(illumio_file, customers_file, output_file):
+    # Load the data from the CSV files
+    all_customers = pd.read_csv(illumio_file)
+    registered_customers = pd.read_csv(customers_file)
+
+    # Ensure the columns are properly named and ordered
+    all_customers.columns = ['href', 'name', 'label:role', 'label:app', 'label:env', 'label:loc', 'label:os', 'label:Status', 'label:sne', 'label:src', 'label:subenv', 'label:proposedapp']
+    registered_customers.columns = ['href', 'name', 'label:role', 'label:app', 'label:env', 'label:loc', 'label:os', 'label:Status', 'label:sne', 'label:src', 'label:subenv', 'label:proposedapp']
+
+    # Create a set of registered emails for quick lookup
+    registered_emails = set(registered_customers['name'])
+
+    # Filter out the registered customers
+#    remaining_customers = all_customers[~all_customers['Email'].isin(
+#        registered_emails)]
+    remaining_customers = all_customers[all_customers['name'].isin(registered_emails)]
+
+    # Save the remaining customers to a new CSV file
+    remaining_customers.to_csv(output_file, index=False)
+    print(f"Remaining customers have been filtered and saved to {output_file}")
+
+
+filter_remaining_customers(
+    illumio_file, customers_file, output_file)
