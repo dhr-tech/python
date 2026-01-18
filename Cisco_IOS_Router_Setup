@@ -1,0 +1,83 @@
+import netmiko
+from netmiko import ConnectHandler
+
+print ("*********** Welcome to the console to configure the router*************")
+user_choice= int(input (" choose if you wish to configure an interface or add a static route. \ntype 1 for interface \n type 2 for static routes \n type 3 for configuring EIGRP \n type 4 for OSPF \nvalue: "))
+
+router_details = {
+"ip":"192.168.111.23",
+"username":"cisco",
+"password":"cisco",
+"device_type":"cisco_ios",
+}
+ssh = ConnectHandler(**router_details)
+print("Connection with Router 1 established sucessfully!")
+
+if user_choice == 1:
+    number_of_interface= input (" enter number of interfaces to be configured: ")
+    for abc in range (0, int (number_of_interface)):
+        interface = input("Enter interface name: ")
+        ip = input("Enter ip address: ")
+        mask = input("Enter subnet mask: ")
+        Description = input("Enter Description ")
+        commands = [ f'interface {interface}', f'ip address {ip} {mask}',f'description {Description}','no sh']
+        int_conf = ssh.send_config_set(commands)
+
+    int_details = ssh.send_command ("show ip interface brief")
+    print(int_details)
+ssh.save_config()
+
+if user_choice == 2:
+    number_of_route=input("enter the number of routes to be configured")
+    for xyz in range (0, int (number_of_route)):
+        destination = input("Enter destination network: ")
+        mask = input("Enter subnet mask: ")
+        next_hop = input("Enter next hop address: ")
+        commands = [ f'ip route {destination} {mask} {next_hop}']
+        route_conf = ssh.send_config_set(commands)
+    route_details = ssh.send_command ("show run | inc ip route")
+    print(route_details)
+
+    route_update = ssh.send_command("show ip route")
+    print(route_update)
+    ssh.save_config()
+
+if user_choice == 3:
+    as_number = input("Enter the EIGRP AS number: ")
+    number_of_route=input("enter the number of EIGRP to be configured: ")
+
+    for cde in range (0, int(number_of_route)):
+        network = input("Enter the network to be advertised: ")
+        wildcard_mask = input("Enter the wildcard mask: ")
+        commands = [ f'router eigrp {as_number}', f'network {network} {wildcard_mask}']
+        eigrp_conf = ssh.send_config_set(commands)
+
+    eigrp_routes = ssh.send_command("show ip route eigrp")
+    print(eigrp_routes)
+    eigrp_config = ssh.send_command("show run | section router eigrp")
+    print(eigrp_config)
+    ssh.save_config()
+
+if user_choice == 4:
+    ospf_process = input("Enter the ospf process ")
+    number_of_route=input("enter the number of route to be configured: ")
+
+    for cde in range (0, int(number_of_route)):
+        network = input("Enter the network to be advertised: ")
+        wildcard_mask = input("Enter the wildcard mask: ")
+        area = input("Enter the area: ")
+        commands = [ f'router ospf {ospf_process}', f'network {network} {wildcard_mask} area {area}']
+        ospf_conf = ssh.send_config_set(commands)
+
+
+
+    ospf_config = ssh.send_command("show run | section router ospf")
+    print(ospf_config)
+    ssh.save_config()
+
+else:
+    print(" invalid choice")
+
+
+
+ssh.disconnect()
