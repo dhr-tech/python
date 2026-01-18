@@ -1,0 +1,41 @@
+import paramiko
+import netmiko
+from netmiko import ConnectHandler
+import getpass
+
+Hostname = input("Enter your Hostname: ")
+interface = input("Enter interface name: ")
+password = input("Enter device password: ")
+ip = input("Enter ip address: ")
+mask = input("Enter subnet mask: ")
+Description = input("Enter Description ")
+
+router_details = {
+"ip":"192.168.111.23",
+"username":"cisco",
+"password": password,
+"device_type":"cisco_ios",
+}
+
+
+
+ssh = ConnectHandler(**router_details)
+print("Connection with Router 1 established sucessfully!")
+
+commands = [ f'hostname {Hostname}', f'interface {interface}', f'ip address {ip} {mask}',f'description {Description}','no sh']
+#commands = [f'hostname {Hostname}', f'interface:{int}', f'ip address:{ip}',f"description"{Description}"]
+int_conf = ssh.send_config_set(commands)
+print(int_conf)
+
+int_details = ssh.send_command("show ip interface brief")
+print(int_details)
+
+ssh.save_config()
+ssh.disconnect()
+
+
+
+
+
+
+
