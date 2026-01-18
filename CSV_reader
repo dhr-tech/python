@@ -1,0 +1,46 @@
+import csv
+
+# creating a function to read csv file, open it,
+def search_csv(file_path, search_field, search_term):
+    results = []  # blank list to store the results when the search is done in CSV file (to store the matching rows)
+    with open(file_path, 'r') as file:  # opening the csv file
+        csv_reader = csv.reader(file)  # reading csv file using reader function of csv library
+        header = next(csv_reader)  # reading the header line (column names in the csv file)
+        # Checking if the specified search field is present in the header.
+        # If not, it prints an error message and returns an empty result list.
+        if search_field not in header:
+            print(f"ERROR: '{search_field}' is not a valid search field.")
+            return results
+
+        for row in csv_reader:
+            if search_term.lower() in row[header.index(search_field)].lower():
+                results.append(row)
+
+    return results
+
+
+# i have a csv file called example_transactions in the same folder of code.
+
+file_path = "Workloads_LabelingColumns_CSV_2026_01_12_11_21_19.csv"  # Replace with your CSV file path if you are using any other csv file.
+while True:
+    search = input("Search by 'name','enforcement_mode','agent_status','online' or else enter quit to Terminate \n ")  # user message
+ #   search_field = search.capitalize()
+    if search.lower() == 'quit':  # if user enters quit/Quit that means he/she wants to quit, then we terminate the program
+        print("User wants to Terminate the Program. See you later!\n")
+        break
+    elif search not in ['name','enforcement_mode','agent_status','online']:  # if the entered term is not in columns
+        print("ERROR: No such column exists in the given CSV file. You must enter a valid search field.\n")
+    else:
+        value = input("What do you want to search for?\n ")
+        results = search_csv(file_path, search,
+                             value)  # calling the above function with user given input parameters
+        # file path is the csv file given
+        # search field is the column name given by user
+        # value is the exact term user is looking for
+        if results:
+            print("\n".join([", ".join(row) for row in results]))
+            print(f"\n{len(results)} records found.")
+        else:
+            print("\n 0 records found.")
+
+
