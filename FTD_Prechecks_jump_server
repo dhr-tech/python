@@ -1,0 +1,64 @@
+from netmiko import ConnectHandler
+from getpass import getpass
+import time
+import re
+
+jump = {
+    "device_type": "linux",
+    "host": "172.x.x.x",
+    "username": "xxx",
+    "password": "yyy",
+    "timeout": 60,
+    "session_log": "netmiko_jump.log",  # debug transcript
+}
+
+FTD_IP = "172.x.x.x"
+FTD_USER = "axxxx"
+FTD_PASS = "yyyyyy"
+
+ssh = ConnectHandler(**jump)
+print("✅ Connected successfully to the Jump Server")
+
+# Optional: clear any buffered output
+ssh.clear_buffer()
+
+print(f"➡ SSHing from jump server to {FTD_IP} ...")
+
+# Kick off the nested SSH
+ssh.write_channel(f"ssh {FTD_USER}@{FTD_IP}\n")
+time.sleep(1)
+
+# Read what came back
+output = ssh.read_channel()
+# Loop to handle interactive prompts (yes/no, password, etc.)
+max_loops = 15
+for _ in range(max_loops):
+    output += ssh.read_channel()
+
+    # Host key verification prompt
+    if re.search(r"are you sure you want to continue connecting", output, re.I):
+        ssh.write_channel("yes\n")
+        time.sleep(1)
+        output += ssh.read_channel()
+
+    # Password prompt
+    if re.search(r"[Pp]assword:", output):
+        ssh.write_channel(FTD_PASS + "\n")
+        time.sleep(2)
+        output += ssh.read_channel()
+        break
+
+    # If slow, nudge with Enter and wait
+    ssh.write_channel("\n")
+    time.sleep(1)
+
+print("🔎 Login dialog output (trimmed):")
+print(output[-800:])  # last part only
+
+# At this point, you should be on the FTD shell/CLI.
+# Use timing-based command if prompt detection is uncertain:
+cmd_output = ssh.send_command_timing("show version", strip_prompt=False, strip_command=False)
+print(cmd_output)
+
+# When finished:
+ssh.disconnect()
